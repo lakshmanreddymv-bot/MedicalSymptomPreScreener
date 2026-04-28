@@ -1,0 +1,95 @@
+package com.example.medicalsymptomprescreener
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.medicalsymptomprescreener.domain.model.CareType
+import com.example.medicalsymptomprescreener.ui.facilities.FacilitiesScreen
+import com.example.medicalsymptomprescreener.ui.guidance.GuidanceScreen
+import com.example.medicalsymptomprescreener.ui.history.HistoryScreen
+import com.example.medicalsymptomprescreener.ui.input.InputScreen
+import com.example.medicalsymptomprescreener.ui.theme.MedicalSymptomPreScreenerTheme
+import com.example.medicalsymptomprescreener.ui.triage.SharedTriageViewModel
+import com.example.medicalsymptomprescreener.ui.triage.TriageScreen
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MedicalSymptomPreScreenerTheme {
+                val navController = rememberNavController()
+
+                // SharedTriageViewModel scoped to the NavHost — survives screen navigation
+                val sharedVm: SharedTriageViewModel = hiltViewModel()
+                val triageResult by sharedVm.triageResult.collectAsState()
+
+                NavHost(navController = navController, startDestination = "input") {
+
+                    composable("input") {
+                        InputScreen(
+                            onTriageResult = { result, symptomText ->
+                                sharedVm.setResult(symptomText, result)
+                                navController.navigate("triage")
+                            }
+                        )
+                    }
+
+                    composable("triage") {
+                        TriageScreen(
+                            sharedViewModel = sharedVm,
+                            onFindFacilities = {
+                                val careType = triageResult?.recommendedCareType ?: CareType.URGENT_CARE
+                                if (careType == CareType.TELEHEALTH || careType == CareType.HOME_CARE) {
+                                    navController.navigate("guidance/${careType.name}")
+                                } else {
+                                    navController.navigate("facilities/${careType.name}")
+                                }
+                            },
+                            onNewAssessment = {
+                                navController.popBackStack("input", inclusive = false)
+                            }
+                        )
+                    }
+
+                    composable("facilities/{careType}") { backStackEntry ->
+                        val careType = runCatching {
+                            CareType.valueOf(backStackEntry.arguments?.getString("careType") ?: "URGENT_CARE")
+                        }.getOrDefault(CareType.URGENT_CARE)
+                        FacilitiesScreen(
+                            careType = careType,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable("guidance/{careType}") { backStackEntry ->
+                        val careType = runCatching {
+                            CareType.valueOf(backStackEntry.arguments?.getString("careType") ?: "TELEHEALTH")
+                        }.getOrDefault(CareType.TELEHEALTH)
+                        GuidanceScreen(
+                            careType = careType,
+                            onBack = { navController.popBackStack() },
+                            onNewAssessment = {
+                                sharedVm.clear()
+                                navController.popBackStack("input", inclusive = false)
+                            }
+                        )
+                    }
+
+                    composable("history") {
+                        HistoryScreen(onBack = { navController.popBackStack() })
+                    }
+                }
+            }
+        }
+    }
+}
