@@ -20,7 +20,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -36,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medicalsymptomprescreener.data.tts.TextToSpeechManager
 import com.example.medicalsymptomprescreener.domain.model.TriageResult
 import com.example.medicalsymptomprescreener.domain.model.UrgencyLevel
@@ -66,7 +68,10 @@ fun TriageScreen(
         }
     }
 
-    val result = triageResult ?: return
+    val result = triageResult ?: run {
+        SessionExpiredCard(onNewAssessment = onNewAssessment)
+        return
+    }
 
     val (bgColor, textColor) = when (result.urgencyLevel) {
         UrgencyLevel.EMERGENCY -> Color(0xFFB71C1C) to Color.White
@@ -246,5 +251,42 @@ fun TriageScreen(
         )
 
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun SessionExpiredCard(onNewAssessment: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Session Expired",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Your previous assessment is no longer available. Start a new assessment to get triage guidance.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedButton(onClick = onNewAssessment) {
+                    Text("Start New Assessment")
+                }
+            }
+        }
     }
 }

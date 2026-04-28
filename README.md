@@ -5,6 +5,7 @@
 > **Always consult a qualified healthcare professional.**
 > **For emergencies, call 911 immediately.**
 
+[![CI](https://github.com/lakshmanreddymv-bot/MedicalSymptomPreScreener/actions/workflows/ci.yml/badge.svg)](https://github.com/lakshmanreddymv-bot/MedicalSymptomPreScreener/actions/workflows/ci.yml)
 [![Android](https://img.shields.io/badge/Android-26%2B-green)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-blue)](https://kotlinlang.org)
 [![Tests](https://img.shields.io/badge/Tests-67%20passing-brightgreen)](app/src/test)
