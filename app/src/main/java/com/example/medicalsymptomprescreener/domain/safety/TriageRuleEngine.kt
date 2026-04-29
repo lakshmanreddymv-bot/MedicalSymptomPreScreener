@@ -71,7 +71,7 @@ object TriageRuleEngine {
      * Returns a copy of [geminiResult] with [TriageResult.urgencyLevel] escalated if any
      * rule fires. The disclaimer is always stamped on the returned result.
      *
-     * @param geminiResult The advisory [TriageResult] returned by Gemini 2.0 Flash.
+     * @param geminiResult The advisory [TriageResult] returned by Gemini 2.5 Flash.
      * @param originalSymptoms The original (untruncated) symptom string. Currently unused
      *   in validation checks but available for future rule extensions.
      * @param temporalMinimum `true` if [EmergencySymptomMatcher.requiresUrgentMinimum] fired —

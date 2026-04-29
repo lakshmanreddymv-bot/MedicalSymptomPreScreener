@@ -5,7 +5,7 @@ package com.example.medicalsymptomprescreener.domain.model
  *
  * Produced by [TriageSymptomUseCase] after passing through:
  * 1. [EmergencySymptomMatcher] (Layer 1 — deterministic keyword gate)
- * 2. Gemini 2.0 Flash (advisory AI layer)
+ * 2. Gemini 2.5 Flash (advisory AI layer)
  * 3. [TriageRuleEngine] (Layer 2 — post-AI validation, escalation only)
  *
  * Held in [SharedTriageViewModel] and read by [TriageScreen].

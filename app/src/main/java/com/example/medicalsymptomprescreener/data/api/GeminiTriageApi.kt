@@ -17,7 +17,7 @@ import com.example.medicalsymptomprescreener.domain.model.TriageResult
  */
 interface GeminiTriageApi {
     /**
-     * Sends [symptoms] to Gemini 2.0 Flash and returns a raw [TriageResult].
+     * Sends [symptoms] to Gemini 2.5 Flash and returns a raw [TriageResult].
      *
      * **Advisory only** — the result is always passed through [TriageRuleEngine.validate]
      * before being returned to the UI. Never used directly as a final triage decision.

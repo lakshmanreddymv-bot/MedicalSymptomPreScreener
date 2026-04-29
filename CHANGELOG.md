@@ -7,7 +7,7 @@
   - Layer 1: EmergencySymptomMatcher — offline keyword + synonym detection on full untruncated string, 7 emergency groups, 50+ synonyms, natural language variants ("my heart feels weird")
   - Layer 1b: TemporalDetector — sudden onset + amber term → URGENT minimum floor
   - Layer 2: TriageRuleEngine — post-AI validation, hedging language detection, anatomical risk term check (Mount Sinai 2026 "paradoxical safety explanation" fix)
-- Gemini 2.0 Flash triage integration — advisory only, temperature 0.1, responseMimeType JSON, single-turn (no instruction drift)
+- Gemini 2.5 Flash triage integration — advisory only, temperature 0.1, responseMimeType JSON, single-turn (no instruction drift)
 - NetworkMonitor — NET_CAPABILITY_VALIDATED check before every Gemini call, graceful offline fallback
 - SharedTriageViewModel — NavGraph-scoped, process-death safe, no serialization
 - SpeechRecognitionManager — @ActivityRetainedScoped, all 9 error codes mapped, partial results for live transcript

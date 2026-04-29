@@ -23,7 +23,7 @@ import javax.inject.Inject
  *    Flags temporal onset + amber term combinations for Step 4.
  * 3. [NetworkMonitor.isConnectedNow] — if offline, returns URGENT safety fallback.
  *    Layer 1 result is still reflected in TTS/UI upstream.
- * 4. Gemini 2.0 Flash API call on `symptoms.take(1000)` — advisory AI triage.
+ * 4. Gemini 2.5 Flash API call on `symptoms.take(1000)` — advisory AI triage.
  * 5. [TriageRuleEngine.validate] — post-AI validation, escalates if needed (never de-escalates).
  *
  * All network and parsing exceptions return [safetyFallbackResult] (URGENT + call 911 message).

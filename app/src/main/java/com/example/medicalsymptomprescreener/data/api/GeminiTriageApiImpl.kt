@@ -12,7 +12,7 @@ import retrofit2.http.Query
 import javax.inject.Inject
 
 /**
- * Retrofit interface for the Gemini 2.0 Flash REST API.
+ * Retrofit interface for the Gemini 2.5 Flash REST API.
  *
  * Single-turn calls only — the `system_instruction` is re-sent on every request
  * to prevent instruction drift that can occur across multi-turn sessions.
@@ -27,7 +27,7 @@ interface GeminiRetrofitService {
      * @param apiKey Gemini API key injected via [BuildConfig.geminiapikey].
      * @param request The full prompt including system instruction, user message, and generation config.
      */
-    @POST("v1beta/models/gemini-2.0-flash:generateContent")
+    @POST("v1beta/models/gemini-2.5-flash:generateContent")
     suspend fun generateContent(
         @Query("key") apiKey: String,
         @Body request: GeminiRequest
@@ -104,7 +104,7 @@ data class TriageJson(
 // ── Implementation ──────────────────────────────────────────────────────────
 
 /**
- * Calls Gemini 2.0 Flash and maps the JSON response to a [TriageResult].
+ * Calls Gemini 2.5 Flash and maps the JSON response to a [TriageResult].
  *
  * Implements [GeminiTriageApi]. The prompt includes a strict system instruction
  * (no diagnosis, no medications, always recommend professional consultation)
@@ -126,7 +126,7 @@ class GeminiTriageApiImpl @Inject constructor(
 ) : GeminiTriageApi {
 
     /**
-     * Sends [symptoms] to Gemini 2.0 Flash and returns a [TriageResult].
+     * Sends [symptoms] to Gemini 2.5 Flash and returns a [TriageResult].
      *
      * @throws IllegalStateException if the API returns an empty or null response body.
      * @throws com.google.gson.JsonSyntaxException if the response JSON is malformed.
