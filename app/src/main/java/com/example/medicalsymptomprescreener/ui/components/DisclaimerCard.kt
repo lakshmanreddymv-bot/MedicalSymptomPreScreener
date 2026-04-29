@@ -13,6 +13,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Persistent safety disclaimer banner displayed at the top of every screen.
+ *
+ * Present on [InputScreen], [TriageScreen], [FacilitiesScreen], and [GuidanceScreen]
+ * to ensure users are always reminded that this app provides triage **guidance** only,
+ * not medical diagnosis or treatment.
+ *
+ * The disclaimer cannot be dismissed or hidden — it is always composed as the first
+ * element of each screen's column.
+ *
+ * @param modifier Optional [Modifier] for overriding background or padding on specific screens.
+ */
 @Composable
 fun DisclaimerCard(modifier: Modifier = Modifier) {
     Text(

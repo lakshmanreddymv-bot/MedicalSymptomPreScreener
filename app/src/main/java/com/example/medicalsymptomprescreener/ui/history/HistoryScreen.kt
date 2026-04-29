@@ -42,6 +42,18 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Displays the saved symptom assessment history as a scrollable list with swipe-to-delete.
+ *
+ * Uses [SwipeToDismissBox] (Material3 API, not the deprecated [SwipeToDismiss]) for
+ * swipe-to-delete. Swiping left reveals a red delete background with a trash icon.
+ * Confirming the swipe calls [HistoryViewModel.delete].
+ *
+ * Empty state shows a centered "No assessments yet." message.
+ *
+ * @param onBack Navigation callback for the back arrow.
+ * @param viewModel [HistoryViewModel] injected by Hilt.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -84,6 +96,16 @@ fun HistoryScreen(
     }
 }
 
+/**
+ * Wraps a [HistoryItemCard] in a [SwipeToDismissBox] to enable swipe-to-delete.
+ *
+ * Uses [SwipeToDismissBoxValue.EndToStart] (left swipe) only.
+ * Confirms the delete action by calling [onDelete] when the swipe completes.
+ *
+ * @param entry The history entry to display and potentially delete.
+ * @param dateFormat Formatter for the assessment timestamp.
+ * @param onDelete Callback invoked when the user swipes to delete this entry.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeToDeleteHistoryItem(
@@ -120,6 +142,15 @@ private fun SwipeToDeleteHistoryItem(
     }
 }
 
+/**
+ * Card displaying a single [SymptomHistory] entry.
+ *
+ * Shows the urgency level as a color-coded badge, the symptom description
+ * (truncated to 80 chars), and the formatted assessment timestamp.
+ *
+ * @param entry The [SymptomHistory] to display.
+ * @param dateFormat Formatter for the assessment timestamp.
+ */
 @Composable
 private fun HistoryItemCard(entry: SymptomHistory, dateFormat: SimpleDateFormat) {
     val urgencyColor = when (entry.triageResult.urgencyLevel) {

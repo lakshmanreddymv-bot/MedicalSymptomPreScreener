@@ -19,6 +19,21 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+/**
+ * Animated microphone button for voice symptom input.
+ *
+ * When [isListening] is `true`:
+ * - Button color changes from blue to red
+ * - Icon changes from [Mic] to [MicOff]
+ * - A pulse animation scales the button 1.0x → 1.15x → 1.0x at 600 ms intervals
+ *   to provide clear visual feedback that recording is active
+ *
+ * Only shown in [InputScreen] when `RECORD_AUDIO` permission is granted.
+ *
+ * @param isListening Whether voice recognition is currently active.
+ * @param onClick Toggles listening on/off. Caller handles start/stop logic in [InputViewModel].
+ * @param modifier Optional [Modifier] for positioning within the parent layout.
+ */
 @Composable
 fun MicButton(
     isListening: Boolean,

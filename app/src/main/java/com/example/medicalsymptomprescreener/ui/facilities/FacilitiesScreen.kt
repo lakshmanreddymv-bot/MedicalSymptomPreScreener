@@ -43,6 +43,24 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 
+/**
+ * Displays nearby medical facilities matching the triage-recommended [CareType].
+ *
+ * Requests `ACCESS_FINE_LOCATION` permission on launch. Once granted, calls
+ * `FusedLocationProviderClient.lastLocation` and passes the result to [FacilitiesViewModel].
+ *
+ * State rendering:
+ * - [FacilitiesUiState.Loading] → spinner
+ * - [FacilitiesUiState.Success] → [LazyColumn] of [FacilityCard] items
+ * - [FacilitiesUiState.Empty] / [FacilitiesUiState.Error] → [RuralFallbackCard]
+ *   with 911 dial button and Google Maps search link
+ * - [FacilitiesUiState.SkipSearch] → no-op (router in [MainActivity] should have
+ *   sent the user to [GuidanceScreen] for TELEHEALTH/HOME_CARE)
+ *
+ * @param careType The recommended care type. Determines which Places API types to search.
+ * @param onBack Navigation callback for the back arrow.
+ * @param viewModel [FacilitiesViewModel] injected by Hilt.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun FacilitiesScreen(
@@ -118,6 +136,14 @@ fun FacilitiesScreen(
     }
 }
 
+/**
+ * Fallback UI shown when no facilities are found or a Places API error occurs.
+ *
+ * Provides a 911 dial button and a Google Maps search link to ensure users in rural areas
+ * or with API failures always have an actionable next step.
+ *
+ * @param message Contextual message explaining why the fallback is shown.
+ */
 @Composable
 private fun RuralFallbackCard(message: String) {
     Column(

@@ -13,6 +13,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Follows Unidirectional Data Flow (UDF):
+ * - Events flow UP from UI via public functions ([updateSymptomText], [startListening], [submitSymptoms], etc.)
+ * - State flows DOWN to UI via [uiState] and [symptomText] StateFlows
+ * - No direct state mutation from the UI layer
+ *
+ * Manages the symptom input screen state: text entry, voice recognition, and triage submission.
+ *
+ * Voice recognition is delegated to [SpeechRecognitionManager]. The ViewModel subscribes to
+ * [speechState] via [LaunchedEffect] in [InputScreen] and feeds results back via [onSpeechResult].
+ * This keeps the permission check in [InputScreen] (UI layer) and the state in [InputViewModel].
+ *
+ * The triage result is NOT stored here — it is passed upward to [SharedTriageViewModel]
+ * via the [onResult] callback in [submitSymptoms]. This avoids duplicate result state.
+ *
+ * S: Single Responsibility — drives the input screen: text, voice, and triage submission.
+ * D: Dependency Inversion — depends on [TriageSymptomUseCase] and [SpeechRecognitionManager].
+ */
 @HiltViewModel
 class InputViewModel @Inject constructor(
     private val triageUseCase: TriageSymptomUseCase,
@@ -20,43 +38,77 @@ class InputViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<InputUiState>(InputUiState.Idle)
+
+    /** Current UI state. Observed by [InputScreen] to toggle spinner, error banner, etc. */
     val uiState: StateFlow<InputUiState> = _uiState.asStateFlow()
 
     private val _symptomText = MutableStateFlow("")
+
+    /** The current symptom text — updated by text field edits or speech recognition results. */
     val symptomText: StateFlow<String> = _symptomText.asStateFlow()
 
     private val _selectedBodyPart = MutableStateFlow<String?>(null)
+
+    /** The optional body area selected via the filter chips (e.g. "Chest", "Head"). */
     val selectedBodyPart: StateFlow<String?> = _selectedBodyPart.asStateFlow()
 
+    /**
+     * Live state from [SpeechRecognitionManager]. Observed in [InputScreen] via [LaunchedEffect]
+     * to sync partial transcripts into [symptomText] in real time.
+     */
     val speechState = speechManager.state
 
+    /** Updates [symptomText] with [text] as the user types or speech partial results arrive. */
     fun updateSymptomText(text: String) {
         _symptomText.value = text
     }
 
+    /** Selects or deselects a body area. Passing the same [part] again deselects it. */
     fun selectBodyPart(part: String?) {
         _selectedBodyPart.value = part
     }
 
-    // Called from InputScreen onClick — AFTER permission is confirmed granted in UI
+    /**
+     * Starts voice recognition via [SpeechRecognitionManager].
+     *
+     * Only called from [InputScreen] after the `RECORD_AUDIO` permission is confirmed granted.
+     * Permission handling is intentionally kept in the UI layer — ViewModels must not request permissions.
+     */
     fun startListening() {
         speechManager.startListening()
     }
 
+    /** Stops the active voice recognition session and resets to [RecognitionState.Idle]. */
     fun stopListening() {
         speechManager.stopListening()
     }
 
+    /**
+     * Called when speech recognition returns a final [transcript].
+     * Copies the transcript to [symptomText] and resets state to [InputUiState.Idle].
+     */
     fun onSpeechResult(transcript: String) {
         _symptomText.value = transcript
         _uiState.value = InputUiState.Idle
     }
 
+    /**
+     * Called when speech recognition reports an error.
+     * Sets state to [InputUiState.Error] with the user-friendly [message] from [speechErrorToMessage].
+     */
     fun onSpeechError(message: String) {
         _uiState.value = InputUiState.Error(message)
     }
 
-    // Returns the TriageResult via callback — SharedTriageViewModel owns the result
+    /**
+     * Submits the current [symptomText] through the triage pipeline.
+     *
+     * Validates that text is not blank, then calls [TriageSymptomUseCase.triage].
+     * On success, calls [onResult] with the [TriageResult] so [MainActivity] can
+     * pass it to [SharedTriageViewModel] and navigate to [TriageScreen].
+     *
+     * @param onResult Callback invoked on the main thread with the successful [TriageResult].
+     */
     fun submitSymptoms(onResult: (com.example.medicalsymptomprescreener.domain.model.TriageResult) -> Unit) {
         val symptoms = _symptomText.value.trim()
         if (symptoms.isBlank()) {
@@ -77,12 +129,17 @@ class InputViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Resets all state to initial values.
+     * Called when the user returns to [InputScreen] after completing an assessment.
+     */
     fun resetState() {
         _uiState.value = InputUiState.Idle
         _symptomText.value = ""
         _selectedBodyPart.value = null
     }
 
+    /** Destroys the [SpeechRecognitionManager] to release native recognizer resources. */
     override fun onCleared() {
         super.onCleared()
         speechManager.destroy()

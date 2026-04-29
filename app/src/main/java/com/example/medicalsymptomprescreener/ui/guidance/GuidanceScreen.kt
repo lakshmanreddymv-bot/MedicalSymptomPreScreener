@@ -27,6 +27,23 @@ import androidx.compose.ui.unit.sp
 import com.example.medicalsymptomprescreener.domain.model.CareType
 import com.example.medicalsymptomprescreener.ui.components.DisclaimerCard
 
+/**
+ * Guidance screen for [CareType.TELEHEALTH] and [CareType.HOME_CARE] triage results.
+ *
+ * No Google Places API call is made — these care types do not require finding a
+ * physical location. The router in [MainActivity] sends users here instead of
+ * [FacilitiesScreen] when the triage result is TELEHEALTH or HOME_CARE.
+ *
+ * Displays contextual guidance:
+ * - [CareType.TELEHEALTH] → [TelehealthGuidance]: virtual visit options and tips
+ * - [CareType.HOME_CARE] → [HomeCareGuidance]: rest, OTC remedies, monitoring advice
+ *
+ * Both paths include a 911 escalation reminder at the bottom and a "Start New Assessment" button.
+ *
+ * @param careType Either [CareType.TELEHEALTH] or [CareType.HOME_CARE].
+ * @param onBack Navigation callback for the back arrow.
+ * @param onNewAssessment Navigation callback to return to [InputScreen].
+ */
 // Shown when recommendedCareType is TELEHEALTH or HOME_CARE.
 // No Places API call is made — no physical facility to find.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +93,11 @@ fun GuidanceScreen(
     }
 }
 
+/**
+ * Guidance content for [CareType.TELEHEALTH] results.
+ * Suggests checking insurance portals and common telehealth services.
+ * Always includes a 911 escalation reminder at the bottom.
+ */
 @Composable
 private fun TelehealthGuidance() {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -95,6 +117,11 @@ private fun TelehealthGuidance() {
     }
 }
 
+/**
+ * Guidance content for [CareType.HOME_CARE] results.
+ * Suggests rest, hydration, OTC remedies, and symptom monitoring.
+ * Always includes a 911 escalation reminder at the bottom.
+ */
 @Composable
 private fun HomeCareGuidance() {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -115,6 +142,10 @@ private fun HomeCareGuidance() {
     }
 }
 
+/**
+ * A single bullet-point guidance item.
+ * @param text The guidance text to display.
+ */
 @Composable
 private fun GuidancePoint(text: String) {
     Text(

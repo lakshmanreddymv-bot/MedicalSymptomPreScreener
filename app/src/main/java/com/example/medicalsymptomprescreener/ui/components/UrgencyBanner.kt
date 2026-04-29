@@ -12,6 +12,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medicalsymptomprescreener.domain.model.UrgencyLevel
 
+/**
+ * Color-coded urgency level banner displayed prominently at the top of [TriageScreen].
+ *
+ * Colors are chosen for maximum visibility and accessibility:
+ * - EMERGENCY → dark red (#B71C1C) — maximum urgency signal
+ * - URGENT → deep orange (#E65100)
+ * - NON_URGENT → amber (#F9A825)
+ * - SELF_CARE → dark green (#2E7D32)
+ *
+ * @param urgencyLevel The [UrgencyLevel] from the triage result to display.
+ * @param modifier Optional [Modifier] for layout customization.
+ */
 @Composable
 fun UrgencyBanner(urgencyLevel: UrgencyLevel, modifier: Modifier = Modifier) {
     val (label, color) = when (urgencyLevel) {

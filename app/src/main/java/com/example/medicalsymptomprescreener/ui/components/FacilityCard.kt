@@ -26,6 +26,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.medicalsymptomprescreener.domain.model.NearbyFacility
 
+/**
+ * Card displaying a single [NearbyFacility] result from the Google Places API.
+ *
+ * Shows:
+ * - Facility name (bold title)
+ * - Formatted address
+ * - Open/Closed status (green/gray), star rating, and approximate distance
+ * - Action buttons: phone dial (if [NearbyFacility.phone] is available) and directions
+ *
+ * The directions button opens Google Maps with the Place ID deep link
+ * (`maps/place/?q=place_id:{id}`), which resolves to the specific facility regardless
+ * of address ambiguity.
+ *
+ * Used in [FacilitiesScreen]'s [LazyColumn].
+ *
+ * @param facility The [NearbyFacility] to display.
+ * @param modifier Optional [Modifier] for layout customization.
+ */
 @Composable
 fun FacilityCard(facility: NearbyFacility, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -59,6 +77,7 @@ fun FacilityCard(facility: NearbyFacility, modifier: Modifier = Modifier) {
             }
 
             Row(modifier = Modifier.padding(top = 8.dp)) {
+                // Phone button — only shown when a phone number is available
                 facility.phone?.let { phone ->
                     IconButton(onClick = {
                         context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone")))
@@ -66,6 +85,7 @@ fun FacilityCard(facility: NearbyFacility, modifier: Modifier = Modifier) {
                         Icon(Icons.Default.Phone, contentDescription = "Call facility")
                     }
                 }
+                // Directions button — opens Google Maps with the Places API place ID
                 IconButton(onClick = {
                     val uri = Uri.parse("https://www.google.com/maps/place/?q=place_id:${facility.mapsPlaceId}")
                     context.startActivity(Intent(Intent.ACTION_VIEW, uri))

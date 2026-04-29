@@ -12,21 +12,41 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+/**
+ * Room-backed implementation of [SymptomRepository].
+ *
+ * Handles the translation between the domain model ([Symptom], [TriageResult])
+ * and the Room entity ([SymptomEntity]). Enums are stored as strings to survive
+ * database schema migrations without conversion issues.
+ *
+ * S: Single Responsibility — bridges the domain model and Room persistence.
+ * D: Dependency Inversion — implements [SymptomRepository] interface.
+ */
 class SymptomRepositoryImpl @Inject constructor(
     private val dao: SymptomDao
 ) : SymptomRepository {
 
+    /**
+     * Returns a live [Flow] of all history records from Room, mapped to domain models.
+     * Emits whenever the `symptom_history` table changes.
+     */
     override fun getAllHistory(): Flow<List<SymptomHistory>> =
         dao.getAllHistory().map { entities -> entities.map { it.toSymptomHistory() } }
 
+    /** Converts [symptom] + [triageResult] to a [SymptomEntity] and inserts it into Room. */
     override suspend fun save(symptom: Symptom, triageResult: TriageResult) {
         dao.insert(symptom.toEntity(triageResult))
     }
 
+    /** Deletes the history entry with [id] from Room. */
     override suspend fun delete(id: String) {
         dao.deleteById(id)
     }
 
+    /**
+     * Maps a domain [Symptom] + [TriageResult] pair to a [SymptomEntity] for Room storage.
+     * Enum values are stored by name (string) to decouple persistence from enum ordinals.
+     */
     private fun Symptom.toEntity(triageResult: TriageResult) = SymptomEntity(
         id = id,
         description = description,
@@ -38,6 +58,11 @@ class SymptomRepositoryImpl @Inject constructor(
         category = category
     )
 
+    /**
+     * Maps a [SymptomEntity] from Room back to a [SymptomHistory] domain model.
+     * Unknown enum values (e.g. from a future migration) default to URGENT and URGENT_CARE
+     * as a conservative safe fallback.
+     */
     private fun SymptomEntity.toSymptomHistory() = SymptomHistory(
         id = id,
         symptom = Symptom(

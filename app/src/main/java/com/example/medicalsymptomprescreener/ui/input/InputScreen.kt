@@ -44,8 +44,30 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 
+/** Body area filter options displayed as horizontal chips. */
 private val BODY_PARTS = listOf("Head", "Chest", "Abdomen", "Limbs", "General")
 
+/**
+ * Primary entry screen for the AI Medical Pre-Screener.
+ *
+ * Provides two symptom input methods:
+ * 1. **Voice input** — gated by `RECORD_AUDIO` permission via Accompanist. The
+ *    [OutlinedTextField] is always visible regardless of permission state so users
+ *    always have a text fallback.
+ * 2. **Text input** — always accessible, never hidden.
+ *
+ * Permission handling stays in this composable — [InputViewModel] never touches
+ * Android permission APIs (Clean Architecture boundary).
+ *
+ * Speech recognition results flow: [SpeechRecognitionManager] → [InputViewModel.speechState]
+ * → [LaunchedEffect] in this screen → [InputViewModel.updateSymptomText].
+ *
+ * On submit, calls [onTriageResult] with the [TriageResult] and the raw symptom text,
+ * which [MainActivity] passes to [SharedTriageViewModel] before navigating to [TriageScreen].
+ *
+ * @param onTriageResult Callback invoked with the triage result and symptom text on success.
+ * @param viewModel [InputViewModel] injected by Hilt. Overridable for previews.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun InputScreen(

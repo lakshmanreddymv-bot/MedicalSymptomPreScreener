@@ -20,6 +20,23 @@ import com.example.medicalsymptomprescreener.ui.triage.SharedTriageViewModel
 import com.example.medicalsymptomprescreener.ui.triage.TriageScreen
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Single Activity entry point for the Medical Symptom Pre-Screener.
+ *
+ * Hosts the full [NavHost] with five destinations:
+ * - `input` → [InputScreen]: symptom entry via text or voice
+ * - `triage` → [TriageScreen]: validated triage result display
+ * - `facilities/{careType}` → [FacilitiesScreen]: nearby facility search
+ * - `guidance/{careType}` → [GuidanceScreen]: telehealth/home care guidance
+ * - `history` → [HistoryScreen]: saved assessment history
+ *
+ * [SharedTriageViewModel] is scoped to the [NavHost] composable (effectively the Activity)
+ * so that it is shared across all destinations without re-creation on navigation.
+ *
+ * The routing logic for TELEHEALTH/HOME_CARE → [GuidanceScreen] vs.
+ * EMERGENCY_ROOM/URGENT_CARE/etc. → [FacilitiesScreen] lives here so that
+ * neither [TriageScreen] nor [SharedTriageViewModel] need to know about navigation.
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +66,7 @@ class MainActivity : ComponentActivity() {
                             sharedViewModel = sharedVm,
                             onFindFacilities = {
                                 val careType = triageResult?.recommendedCareType ?: CareType.URGENT_CARE
+                                // Route TELEHEALTH/HOME_CARE to GuidanceScreen — no Places API call
                                 if (careType == CareType.TELEHEALTH || careType == CareType.HOME_CARE) {
                                     navController.navigate("guidance/${careType.name}")
                                 } else {

@@ -13,10 +13,40 @@ import java.io.EOFException
 import java.io.IOException
 import javax.inject.Inject
 
+/**
+ * Orchestrates the three-layer triage safety pipeline for a single symptom submission.
+ *
+ * **Execution order:**
+ * 1. [EmergencySymptomMatcher.isEmergency] — runs on FULL untruncated string (~5 ms, offline).
+ *    Returns EMERGENCY immediately if any emergency keyword group matches. No API call made.
+ * 2. [EmergencySymptomMatcher.requiresUrgentMinimum] — runs on FULL untruncated string.
+ *    Flags temporal onset + amber term combinations for Step 4.
+ * 3. [NetworkMonitor.isConnectedNow] — if offline, returns URGENT safety fallback.
+ *    Layer 1 result is still reflected in TTS/UI upstream.
+ * 4. Gemini 2.0 Flash API call on `symptoms.take(1000)` — advisory AI triage.
+ * 5. [TriageRuleEngine.validate] — post-AI validation, escalates if needed (never de-escalates).
+ *
+ * All network and parsing exceptions return [safetyFallbackResult] (URGENT + call 911 message).
+ * This class has zero Android dependencies — fully unit-testable with mock interfaces.
+ *
+ * S: Single Responsibility — orchestrates the triage pipeline for one symptom submission.
+ * D: Dependency Inversion — depends on [GeminiTriageApi] and [NetworkMonitor] abstractions.
+ */
 class TriageSymptomUseCase @Inject constructor(
     private val geminiApi: GeminiTriageApi,
     private val networkMonitor: NetworkMonitor
 ) {
+    /**
+     * Runs the full triage pipeline for [symptoms].
+     *
+     * Always returns [Result.success] — all failure modes produce a safe URGENT fallback,
+     * never [Result.failure]. The caller can always safely unwrap with [Result.getOrThrow].
+     *
+     * @param symptoms Raw symptom description as entered or dictated by the user.
+     *   Layer 1 always runs on this full string. Truncation to 1000 chars happens only
+     *   before the Gemini call.
+     * @return [Result.success] wrapping a [TriageResult] from the validated pipeline.
+     */
     suspend fun triage(symptoms: String): Result<TriageResult> {
         // Layer 1a: Emergency gate — runs on FULL untruncated string
         if (EmergencySymptomMatcher.isEmergency(symptoms)) {
@@ -53,6 +83,10 @@ class TriageSymptomUseCase @Inject constructor(
         return Result.success(validated)
     }
 
+    /**
+     * Hardcoded EMERGENCY result for Layer 1 keyword matches.
+     * Returned without any API call — deterministic, offline, immediate.
+     */
     private fun emergencyResult() = TriageResult(
         urgencyLevel = UrgencyLevel.EMERGENCY,
         reasoning = "Your symptoms require immediate emergency care. Call 911 now.",
@@ -62,6 +96,10 @@ class TriageSymptomUseCase @Inject constructor(
         followUpQuestions = emptyList()
     )
 
+    /**
+     * Safe fallback result returned when the network is unavailable or any API/parse
+     * exception occurs. Defaults to URGENT to avoid under-triaging during outages.
+     */
     private fun safetyFallbackResult() = TriageResult(
         urgencyLevel = UrgencyLevel.URGENT,
         reasoning = "Unable to assess symptoms automatically. " +

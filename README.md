@@ -1,18 +1,46 @@
 # AI Medical Symptom Pre-Screener
 
-> **⚠️ IMPORTANT SAFETY DISCLAIMER**
-> This application is NOT a medical diagnosis tool. It provides general triage guidance only.
-> **Always consult a qualified healthcare professional.**
-> **For emergencies, call 911 immediately.**
+**Voice or text symptoms → Gemini AI triage → urgency level → nearest facility.**
+Safety-critical Android app built to demonstrate defense-in-depth AI architecture.
 
 [![CI](https://github.com/lakshmanreddymv-bot/MedicalSymptomPreScreener/actions/workflows/ci.yml/badge.svg)](https://github.com/lakshmanreddymv-bot/MedicalSymptomPreScreener/actions/workflows/ci.yml)
-[![Android](https://img.shields.io/badge/Android-26%2B-green)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-blue)](https://kotlinlang.org)
+[![Android](https://img.shields.io/badge/Android-26%2B-green)](https://developer.android.com)
+[![Gemini API](https://img.shields.io/badge/Gemini-2.0%20Flash-orange)](https://aistudio.google.com)
+[![Google Maps](https://img.shields.io/badge/Maps-Places%20API%20v1-red)](https://developers.google.com/maps)
 [![Tests](https://img.shields.io/badge/Tests-67%20passing-brightgreen)](app/src/test)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM%20%2B%20Hilt-orange)](https://developer.android.com/topic/architecture)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-**Project 4 in a portfolio of real-world AI Android apps.**
-Built to demonstrate safety-critical AI architecture for Big Tech (Google, Meta, Apple) interviews.
+**Project 4 of 4 in a portfolio of real-world AI Android apps.**
+[View full portfolio →](#portfolio)
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/input_screen.png" width="300" alt="Input Screen"/>
+  <img src="docs/screenshots/emergency_screen.png" width="300" alt="Emergency Screen (red)"/>
+</p>
+<p align="center">
+  <em>Input Screen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Emergency Screen (red)</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/urgent_screen.png" width="300" alt="Urgent Screen (orange)"/>
+  <img src="docs/screenshots/guidance_screen.png" width="300" alt="Guidance Screen"/>
+</p>
+<p align="center">
+  <em>Urgent Screen (orange) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Guidance Screen</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/facilities_screen.png" width="300" alt="Facilities Map Screen"/>
+  <img src="docs/screenshots/history_screen.png" width="300" alt="History Screen"/>
+</p>
+<p align="center">
+  <em>Facilities Map Screen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; History Screen</em>
+</p>
 
 ---
 
@@ -20,18 +48,73 @@ Built to demonstrate safety-critical AI architecture for Big Tech (Google, Meta,
 
 - **40% of ER visits are unnecessary**, costing $32B+ annually in the US
 - Rural areas have zero access to doctors — the nearest hospital may be 2+ hours away
-- People don't know when to seek urgent vs non-urgent care
+- People don't know when to seek urgent vs. non-urgent care
 - Every minute of delay in real emergencies costs lives
-
-## The Solution
-
-Voice or text symptom input → Gemini 2.0 Flash AI triage → urgency level → nearest facility via Maps.
-
-**Safety first. Never replaces a doctor. Only guides timing.**
 
 ---
 
-## What Makes This Different: Three-Layer Defense-in-Depth
+## ⚠️ Safety Disclaimer
+
+> **This app is NOT a substitute for professional medical advice, diagnosis, or treatment.**
+> It provides triage guidance only — it does not diagnose conditions and does not suggest medications.
+> **Always call 911 for life-threatening emergencies.**
+> Always consult a qualified healthcare professional.
+
+---
+
+## Features
+
+- **Three-layer defense-in-depth safety architecture** — deterministic safety overrides AI
+- **Voice symptom input** with real-time transcript display (Android SpeechRecognizer)
+- **Gemini 2.0 Flash AI triage** — advisory layer only, temperature 0.1 for consistency
+- **Google Maps nearby facilities** — Places API v1, urgency-mapped type search
+- **Dedicated guidance for telehealth/home care** — no misleading empty map for virtual care
+- **Offline safe** — URGENT minimum returned when no network (Layer 1 still runs)
+- **Scan history** with Room persistence and swipe-to-delete
+- **CI/CD** with GitHub Actions — unit tests + debug build on every push
+- **Clean Architecture + MVVM + Hilt + UDF** throughout
+
+---
+
+## How It Works — AI Triage Pipeline
+
+```mermaid
+flowchart TD
+    A[Voice / Text Input] --> B
+
+    subgraph Layer1 ["Layer 1: EmergencySymptomMatcher (offline, ~5ms)"]
+        B[Keyword detection on FULL untruncated string]
+        B --> C{Emergency match?}
+    end
+
+    C -->|Yes| D["🚨 EMERGENCY → 911 Screen\n(no API call made)"]
+    C -->|No| E[Check temporal onset + amber terms]
+    E --> F{Network available?}
+    F -->|No| G["🟠 URGENT fallback\n(Layer 1 still ran)"]
+    F -->|Yes| H
+
+    subgraph Layer2 ["Gemini 2.0 Flash (advisory)"]
+        H[AI triage call\ntemperature=0.1, JSON output]
+    end
+
+    H --> I
+
+    subgraph Layer3 ["Layer 3: TriageRuleEngine (post-AI validation)"]
+        I[Check A: Hedging language in reasoning?]
+        I --> J[Check B: Anatomical risk terms in reasoning?]
+        J --> K[Apply temporal minimum floor]
+    end
+
+    K --> L{Recommended care type?}
+    L -->|TELEHEALTH / HOME_CARE| M[GuidanceScreen]
+    L -->|EMERGENCY_ROOM / URGENT_CARE\nPRIMARY_CARE / PHARMACY| N[FacilitiesScreen + Maps]
+```
+
+**Iron rule: EMERGENCY is always a floor. Deterministic code is authoritative. Gemini is advisory.**
+
+---
+
+## Three-Layer Safety Architecture
 
 Most AI triage apps call an AI and trust the result. This app doesn't.
 
@@ -39,159 +122,119 @@ The 2026 Mount Sinai study found that state-of-the-art AI models undertriage **5
 via "paradoxical safety explanations" — the AI recognizes danger in its reasoning but still advises
 waiting. This app builds the explicit fix.
 
-```
-TRIAGE EXECUTION FLOW
-══════════════════════════════════════════════════════════════════
-                                                                  
-  Layer 1: EmergencySymptomMatcher (offline, ~5ms)               
-  ┌─────────────────────────────────────────────────────────┐    
-  │ Synonym groups + natural language variants               │    
-  │ "my heart feels weird" → EMERGENCY (no API needed)      │    
-  │ TemporalDetector: "suddenly dizzy" → URGENT minimum     │    
-  │ Runs on FULL untruncated string                          │    
-  └──────────────────┬──────────────────────────────────────┘    
-                     │ No match? Continue to Layer 2             
-                     ▼                                           
-  Pre-check: Network available?                                   
-  NO → safetyFallbackResult (URGENT + "call 911 if emergency")   
-                     │                                           
-                     ▼                                           
-  Gemini 2.0 Flash call (advisory, temperature=0.1)              
-                     │                                           
-                     ▼                                           
-  Layer 2: TriageRuleEngine (can ONLY escalate, never de-escalate)
-  ┌─────────────────────────────────────────────────────────┐    
-  │ Check A: Hedging language in Gemini reasoning?          │    
-  │   "might", "could", "cannot rule out" → floor to URGENT │    
-  │ Check B: Anatomical risk terms in Gemini reasoning?     │    
-  │   "cardiac", "respiratory", "brain" → floor to URGENT   │    
-  │   ← Mount Sinai "paradoxical safety explanation" fix    │    
-  └──────────────────┬──────────────────────────────────────┘    
-                     │                                           
-                     ▼                                           
-  EMERGENCY / URGENT / NON_URGENT / SELF_CARE                    
-══════════════════════════════════════════════════════════════════
+```mermaid
+flowchart LR
+    subgraph L1 ["Layer 1 — EmergencySymptomMatcher"]
+        direction TB
+        A1["Synonym groups\n7 emergency categories\n50+ natural language variants"]
+        A2["TemporalDetector\nsuddenly + amber term → URGENT floor"]
+    end
+
+    subgraph L2 ["Gemini 2.0 Flash"]
+        direction TB
+        B1["Advisory triage\ntemperature=0.1\nJSON schema enforced"]
+    end
+
+    subgraph L3 ["Layer 3 — TriageRuleEngine"]
+        direction TB
+        C1["Check A: Hedging language\nmight / could / cannot rule out"]
+        C2["Check B: Anatomical risk terms\ncardiac / respiratory / brain\n← Mount Sinai 2026 fix"]
+    end
+
+    L1 -->|No match| L2
+    L2 --> L3
+    L3 --> OUT["EMERGENCY / URGENT\nNON_URGENT / SELF_CARE"]
 ```
 
-**Iron rule:** EMERGENCY is a floor. Deterministic code is authoritative. Gemini is advisory.
+| Layer | Component | Type | Role | Tests |
+|---|---|---|---|---|
+| 1 | EmergencySymptomMatcher | Deterministic | Fires before any AI call. EMERGENCY = immediate, no network. | 25 |
+| 2 | Gemini 2.0 Flash | Advisory AI | Complex symptom assessment. Temperature 0.1. Single-turn only. | — |
+| 3 | TriageRuleEngine | Post-AI Validator | Catches AI under-triaging. Hedging + anatomical term checks. | 16 |
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│           UI Layer (Jetpack Compose)         │
-│  InputScreen  TriageScreen  FacilitiesScreen │
-│  GuidanceScreen  HistoryScreen               │
-│  SharedTriageViewModel (NavGraph-scoped)     │
-└─────────────────────┬───────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────┐
-│          Domain Layer (Pure Kotlin)          │
-│  TriageSymptomUseCase                        │
-│  EmergencySymptomMatcher ← Layer 1           │
-│  TriageRuleEngine ← Layer 2                  │
-│  NetworkMonitor (interface)                  │
-│  FindNearbyFacilitiesUseCase                 │
-│  GetSymptomHistoryUseCase · SaveSymptomUseCase│
-└─────────────────────┬───────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────┐
-│           Data Layer                         │
-│  GeminiTriageApiImpl (Retrofit)              │
-│  GooglePlacesApiImpl (Retrofit, new v1 API)  │
-│  ConnectivityNetworkMonitor                  │
-│  SpeechRecognitionManager (@ActivityRetained)│
-│  TextToSpeechManager                         │
-│  Room: SymptomDao · SymptomDatabase          │
-└─────────────────────────────────────────────┘
+### Clean Architecture
+
+```mermaid
+flowchart TB
+    subgraph UI ["UI Layer (Jetpack Compose)"]
+        direction LR
+        InputScreen --> InputViewModel
+        TriageScreen --> SharedTriageViewModel
+        FacilitiesScreen --> FacilitiesViewModel
+        GuidanceScreen
+        HistoryScreen --> HistoryViewModel
+    end
+
+    subgraph Domain ["Domain Layer (Pure Kotlin — zero Android deps)"]
+        direction LR
+        TriageSymptomUseCase
+        FindNearbyFacilitiesUseCase
+        EmergencySymptomMatcher
+        TriageRuleEngine
+        NetworkMonitor
+    end
+
+    subgraph Data ["Data Layer"]
+        direction LR
+        GeminiTriageApiImpl
+        GooglePlacesApiImpl
+        ConnectivityNetworkMonitor
+        SpeechRecognitionManager
+        SymptomRepositoryImpl
+        SymptomDao
+    end
+
+    UI --> Domain
+    Domain --> Data
 ```
 
-**Clean Architecture + MVVM + Hilt.** Zero Android dependencies in the domain layer.
+### Unidirectional Data Flow (UDF)
+
+```mermaid
+sequenceDiagram
+    participant UI as InputScreen
+    participant VM as InputViewModel
+    participant UC as TriageSymptomUseCase
+    participant Safety as EmergencySymptomMatcher
+    participant AI as Gemini 2.0 Flash
+    participant Rule as TriageRuleEngine
+    participant Shared as SharedTriageViewModel
+
+    UI->>VM: submitSymptoms(text)
+    VM->>UC: triage(symptoms)
+    UC->>Safety: isEmergency(FULL string)
+    alt Emergency keyword match
+        Safety-->>UC: true
+        UC-->>VM: Result.success(EMERGENCY)
+    else No match
+        UC->>AI: generateContent(symptoms.take(1000))
+        AI-->>UC: TriageResult (advisory)
+        UC->>Rule: validate(geminiResult, symptoms, temporalMinimum)
+        Rule-->>UC: TriageResult (validated, escalated if needed)
+        UC-->>VM: Result.success(validated)
+    end
+    VM->>Shared: setResult(symptomText, result)
+    VM-->>UI: InputUiState.Done
+    UI->>UI: navigate("triage")
+```
 
 ---
 
-## Safety Guardrails
+## Key Engineering Decisions
 
-### Keyword + Synonym Detection (Layer 1)
-
-The safety layer runs on the **full, untruncated** symptom string before any AI call:
-
-```kotlin
-val EMERGENCY_GROUPS = listOf(
-    // Cardiac — natural language variants
-    setOf("chest pain", "chest tightness", "heart attack",
-          "my heart feels weird", "heart feels strange"),
-    // Respiratory
-    setOf("can't breathe", "difficulty breathing", "short of breath"),
-    // Neurological
-    setOf("stroke", "seizure", "passed out", "loss of consciousness"),
-    // Mental health emergency
-    setOf("suicidal", "overdose", "took too many pills"),
-    // Allergic
-    setOf("anaphylaxis", "throat closing", "throat is closing"),
-    // ... 7 groups total, 50+ synonyms
-)
-```
-
-**Emergency keyword → EMERGENCY immediately. No AI call. No network needed.**
-
-### Anatomical Risk Term Check (Layer 2, the Mount Sinai fix)
-
-```kotlin
-val ANATOMICAL_RISK_TERMS = setOf(
-    "heart", "cardiac", "airway", "respiratory", "brain",
-    "neurological", "spine", "aorta", "pulmonary"
-)
-
-// If Gemini writes "cardiac" in its reasoning but sets urgency=NON_URGENT
-// → this check catches it and floors to URGENT
-```
-
-### All Failure Modes Handled
-
-| Failure | Detection | Response |
-|---------|-----------|----------|
-| Gemini API down | catch(IOException) | URGENT fallback + "call 911 if emergency" |
-| Truncated JSON | catch(EOFException) | URGENT fallback |
-| No internet | NetworkCapabilities check | URGENT fallback (Layer 1 still ran) |
-| Maps API fails | empty/error result | RuralFallbackCard with 911 + search links |
-| Mic denied | Accompanist permission | Text input shown, mic hidden |
-| TELEHEALTH result | shouldSkipFacilitySearch | GuidanceScreen (no Places API call) |
-
----
-
-## Gemini Prompt Engineering
-
-Single-turn calls only (no multi-turn — prevents instruction drift):
-
-```json
-{
-  "system_instruction": "You are a medical triage assistant. You do NOT diagnose conditions.
-    You do NOT suggest medications. You ALWAYS recommend professional medical consultation.",
-  "generationConfig": {
-    "temperature": 0.1,
-    "responseMimeType": "application/json"
-  }
-}
-```
-
-`temperature: 0.1` — medical triage must be consistent, not creative.
-`responseMimeType: "application/json"` — eliminates parsing failures from prose wrappers.
-
----
-
-## Real-World Use Cases
-
-| Scenario | Expected Result |
-|---|---|
-| Parent: "My child has had a fever for 3 days" | NON_URGENT → Primary Care |
-| "Chest pain and I can't breathe" | EMERGENCY → 911 (Layer 1 keyword match) |
-| Rural patient, nearest hospital 2hrs away | URGENT → closest urgent_care_center shown |
-| "Mild headache and tired" | SELF_CARE → home rest + pharmacy |
-| "Throat is closing" | EMERGENCY → 911 (synonym group match) |
-| AI writes "cardiac" in reasoning, sets NON_URGENT | URGENT (Layer 2 anatomical fix) |
+| Decision | What | Why |
+|---|---|---|
+| 1. NetworkMonitor interface | Abstracts ConnectivityManager | Fully testable — mock returns false in unit tests. No Android framework in domain. |
+| 2. `emergencyResult()` hardcoded | EMERGENCY text is locked in code | Gemini can never influence the 911 call message. Deterministic, auditable. |
+| 3. SharedTriageViewModel (NavGraph scope) | TriageResult held in memory across screens | `List<String>` can't serialize as nav args. NavGraph scope avoids serialization entirely. |
+| 4. RECORD_AUDIO permission in UI layer only | Permission check in InputScreen, not InputViewModel | ViewModels must not request permissions — clean separation, testable ViewModel. |
+| 5. TELEHEALTH/HOME_CARE → GuidanceScreen | Skip Places API for virtual/home care | Calling Places API for TELEHEALTH returns meaningless results. Dedicated screen is honest. |
+| 6. `speechErrorToMessage()` maps all 9 codes | All SpeechRecognizer.ERROR_* constants handled | Users see "Network error. Use text input instead." not error code 4. |
+| 7. Layer 1 runs on FULL string | Truncation only before Gemini, not before keyword match | Emergency keyword at char 1001 would be silently missed if truncated first. |
 
 ---
 
@@ -202,95 +245,128 @@ Single-turn calls only (no multi-turn — prevents instruction drift):
 | Language | Kotlin 2.2.10 |
 | UI | Jetpack Compose + Material 3 |
 | Architecture | Clean Architecture + MVVM + Hilt 2.59.1 |
-| AI/Triage | Gemini 2.0 Flash (v1beta) via Retrofit |
+| AI / Triage | Gemini 2.0 Flash (v1beta) via Retrofit |
 | Maps | Google Maps Compose + Places API v1 |
 | Voice Input | Android SpeechRecognizer (built-in) |
-| TTS | Android TextToSpeech (built-in) |
+| Text-to-Speech | Android TextToSpeech (built-in) |
 | Database | Room 2.7.1 |
-| Permissions | Accompanist Permissions |
+| Permissions | Accompanist Permissions 0.37.0 |
 | Networking | Retrofit 2.11.0 + OkHttp 4.12.0 |
+| DI | Hilt (Dagger) |
 | Testing | JUnit4 + Mockito-Kotlin + Coroutines-Test |
-
----
-
-## Test Coverage
-
-```
-EmergencySymptomMatcher:   25 tests (synonym groups, natural language, temporal detection)
-TriageRuleEngine:          16 tests (hedging language, anatomical terms, escalation rules)
-UrgencyLevelOrdering:       6 tests (safety-critical enum invariant)
-TriageSymptomUseCase:      12 tests (Gemini down, offline, full-string Layer 1 invariant)
-FacilitiesFailureMode:      7 tests (TELEHEALTH/HOME_CARE skip logic)
-─────────────────────────────────────
-Total:                     67 tests, 0 failures
-```
-
-The `UrgencyLevelOrderingTest` is particularly important — it enforces the enum ordinal
-ordering that the RuleEngine depends on. If anyone reorders the enum (e.g., for readability),
-this test fails immediately with a clear message before any production code is affected.
+| CI/CD | GitHub Actions |
 
 ---
 
 ## Setup
 
 ### Prerequisites
+
 - Android Studio Ladybug or later
 - Android SDK 36
-- Gemini API key ([get one free](https://aistudio.google.com/app/apikey))
-- Google Maps API key ([enable Maps + Places API](https://console.cloud.google.com/))
+- Gemini API key ([get one free at aistudio.google.com](https://aistudio.google.com/app/apikey))
+- Google Maps API key (enable Maps SDK + Places API at Google Cloud Console)
 
-### Configuration
+### Clone
 
-Add to `local.properties` (never commit this file):
+```bash
+git clone https://github.com/lakshmanreddymv-bot/MedicalSymptomPreScreener.git
+cd MedicalSymptomPreScreener
+```
+
+### Configure API Keys
+
+Add to `local.properties` (this file is gitignored — never commit it):
+
 ```properties
 gemini.api.key=YOUR_GEMINI_API_KEY
 maps.api.key=YOUR_MAPS_API_KEY
 ```
 
-### Build
+### Build and Run
 
 ```bash
-./gradlew assembleDebug        # build APK
+./gradlew assembleDebug        # build debug APK
+./gradlew installDebug         # install on connected device or emulator
 ./gradlew test                 # run all 67 unit tests
-./gradlew installDebug         # install on connected device
 ```
+
+**No API keys needed for safety layer testing.** The 67 unit tests mock the Gemini API.
+`local.defaults.properties` provides `PLACEHOLDER` values for CI builds.
 
 ---
 
-## Architecture Decisions (Key Ones)
+## Unit Tests
 
-**Why `SharedTriageViewModel` scoped to NavGraph?**
-`TriageResult` contains a `List<String>` — too complex to serialize as a nav argument.
-NavGraph-scoped ViewModel survives rotation without serialization. On process death,
-`TriageScreen` guards with `triageResult ?: return` (blank screen, no crash).
+| Test Class | Tests | What It Verifies |
+|---|---|---|
+| EmergencySymptomMatcherTest | 25 | Keyword synonym groups, natural language variants, temporal detection |
+| TriageRuleEngineTest | 16 | Hedging language escalation, anatomical term escalation, three-layer ordering |
+| UrgencyLevelOrderingTest | 6 | Enum ordinal safety invariant — reorder = immediate test failure |
+| TriageSymptomUseCaseTest | 12 | Gemini down, offline fallback, full-string Layer 1 invariant |
+| FacilitiesFailureModeTest | 7 | TELEHEALTH/HOME_CARE skip logic, all care type routing |
+| **Total** | **67** | **0 failures** |
 
-**Why `@ActivityRetainedScoped` for SpeechRecognitionManager?**
-`SpeechRecognizer` must be created on the main thread. `@Singleton` scoping can
-instantiate it during app startup off the main thread, causing silent failures.
-ActivityRetained scope ensures main-thread creation and correct lifecycle.
+`UrgencyLevelOrderingTest` is the sentinel — if anyone reorders the `UrgencyLevel` enum
+(e.g. for readability), this test fails immediately with a clear message before production code is affected.
 
-**Why the new Places API endpoint?**
-`maps.googleapis.com/maps/api/place/nearbysearch` is deprecated.
-`places.googleapis.com/v1/places:searchNearby` is the current endpoint.
-Type mapping: URGENT → `["hospital", "urgent_care_center"]` (not `"doctor"` —
-the `doctor` type is sparsely indexed and returns near-empty results in most areas).
+### Run tests
 
-**Why `temperature: 0.1` for Gemini?**
-Medical triage must be deterministic. High temperature means the same symptoms
-could get different urgency levels on consecutive calls. Low temperature makes
-the model consistent.
+```bash
+./gradlew test
+```
+
+Test reports: `app/build/reports/tests/testDebugUnitTest/index.html`
+
+---
+
+## Bugs Fixed During Build
+
+| # | Bug | Root Cause | Fix |
+|---|---|---|---|
+| 1 | KSP plugin not found | `2.2.10-1.0.29` doesn't exist for KSP | Checked gradle cache — correct version is `2.2.10-2.0.2` |
+| 2 | Hilt "Android BaseExtension not found" | `hilt = "2.56"` doesn't exist | Checked gradle cache — correct version is `2.59.1` |
+| 3 | "Cannot add extension 'kotlin'" | `kotlin-android` + `kotlin-compose` conflict in Kotlin 2.2.x | Removed `kotlin-android` plugin — compose plugin includes it |
+| 4 | `kotlinOptions {}` Unresolved reference | AGP 9.x removed `kotlinOptions` block | Deleted `kotlinOptions {}` entirely |
+| 5 | Manifest merger failed `MAPS_API_KEY` | Secrets plugin strips dots → `maps.api.key` becomes `mapsapikey` | Changed manifest meta-data to `${mapsapikey}` |
+| 6 | `SwipeToDismiss` Unresolved reference | Removed in recent Material3 | Replaced with `SwipeToDismissBox` + `SwipeToDismissBoxValue` |
+| 7 | "throat is closing" not detected | `"throat closing"` in set but `"my throat is closing"` doesn't contain substring | Added `"throat is closing"` to allergic emergency group |
+| 8 | `doAnswer` required for suspend mock exceptions | Mockito `thenThrow` rejects checked exceptions on Kotlin suspend functions | Used `doAnswer { throw IOException() }.whenever(mock).triage(any())` |
+
+---
+
+## Real-World Use Cases
+
+| Scenario | Input | Result |
+|---|---|---|
+| Parent with sick child | "My child has had a fever for 3 days" | NON_URGENT → Primary Care |
+| Cardiac emergency | "Chest pain and I can't breathe" | EMERGENCY → 911 (Layer 1 keyword match) |
+| Rural patient | "Severe headache, 2 hours from hospital" | URGENT → nearest urgent care shown |
+| Anaphylaxis variant | "My throat is closing" | EMERGENCY → 911 (synonym group match) |
+| Mount Sinai paradox | Gemini reasoning: "cardiac involvement" + urgency: NON_URGENT | URGENT (Layer 3 anatomical term escalation) |
+| No network | Any symptoms, offline device | URGENT minimum shown, never SELF_CARE |
+| Telehealth recommendation | "Mild fatigue, no fever" → TELEHEALTH | GuidanceScreen with virtual visit options, no empty map |
 
 ---
 
 ## Ethical Considerations
 
-This app provides triage **guidance**, not medical **diagnosis**. Every screen shows
-the disclaimer. No specific medications or treatments are ever suggested. The app
-always recommends professional consultation and makes 911 prominent throughout.
+- **AI as advisor, not decision maker.** Deterministic safety rules always override Gemini's output.
+- **Fail-safe design.** When uncertain, the system escalates — false positives (over-triage) are preferable to missed emergencies.
+- **No health data leaves the device** beyond the Gemini API call, which is subject to Google's privacy policy.
+- **Transparent about AI limitations.** Every screen shows the disclaimer. The UI never implies diagnosis.
+- **No medications suggested.** System instruction explicitly prohibits medication recommendations.
+- **911 is always prominent.** Emergency escalation is the first response for detected emergencies, not a footnote.
 
-The safety guardrails are designed conservatively — when uncertain, the system
-escalates (never de-escalates). False positives (unnecessary urgency) are preferable
-to false negatives (missed emergencies).
+---
+
+## Roadmap
+
+- [ ] Wearable integration (heart rate + SpO2 context from Wear OS)
+- [ ] Multi-language symptom input (Spanish, Mandarin)
+- [ ] Offline Gemini model (on-device triage for rural zero-connectivity areas)
+- [ ] Integration with insurance provider APIs (coverage-aware facility ranking)
+- [ ] Pediatric symptom profiles (age-adjusted urgency thresholds)
 
 ---
 
@@ -298,10 +374,10 @@ to false negatives (missed emergencies).
 
 | Project | Description | Tech |
 |---|---|---|
-| [MySampleApplication-AI](https://github.com/lakshmanreddymv-bot/MySampleApplication-AI) | AI Natural Language Search | Gemini API + Clean Architecture |
-| [FakeProductDetector](https://github.com/lakshmanreddymv-bot/FakeProductDetector) | Counterfeit detection ($500B problem) | Gemini Vision + Claude Haiku |
-| [EnterpriseDocumentRedactor](https://github.com/lakshmanreddymv-bot/EnterpriseDocumentRedactor) | GDPR/HIPAA PII redaction, fully offline | ML Kit OCR + on-device AI |
-| **MedicalSymptomPreScreener** | **Safety-critical AI triage** | **Gemini + Three-layer safety** |
+| [MySampleApplication-AI](https://github.com/lakshmanreddymv-bot/MySampleApplication-AI) ✅ | AI Natural Language Search | Gemini API + Clean Architecture |
+| [FakeProductDetector](https://github.com/lakshmanreddymv-bot/FakeProductDetector) ✅ | Counterfeit detection ($500B problem) | Gemini Vision + Claude Haiku |
+| [EnterpriseDocumentRedactor](https://github.com/lakshmanreddymv-bot/EnterpriseDocumentRedactor) ✅ | GDPR/HIPAA PII redaction, fully offline | ML Kit OCR + on-device AI |
+| **MedicalSymptomPreScreener** ✅ | **Safety-critical AI triage** | **Gemini + Three-layer safety** |
 
 ---
 
@@ -309,8 +385,11 @@ to false negatives (missed emergencies).
 
 MIT License — see [LICENSE](LICENSE)
 
+---
+
 ## Author
 
 **Lakshmana Reddy** — Android Tech Lead, 12 years experience
 Building AI-powered Android apps | Pleasanton, California
+
 [GitHub](https://github.com/lakshmanreddymv-bot) | lakshmanreddymv@gmail.com
