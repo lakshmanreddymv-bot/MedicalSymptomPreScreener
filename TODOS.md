@@ -2,13 +2,10 @@
 
 ## Post-v1 Enhancements
 
-### TODO: Gemini API response caching
-**What:** LRU cache (5 entries, 5-min TTL) in GeminiTriageApiImpl, keyed on symptoms.take(200).hashCode()
-**Why:** Portfolio demo with multiple reviewers hitting identical test symptoms burns API quota. Also prevents redundant TTS "Call 911" triggers on repeated submissions.
-**Pros:** Reduces Gemini API cost, improves demo latency, demonstrates thoughtful API design
-**Cons:** Slight complexity in GeminiTriageApiImpl; stale results if symptoms are exactly repeated
-**Context:** Emergency keyword path (Layer 1) always bypasses cache — only Gemini call is cached
-**Depends on:** Core app built and working
+### ~~TODO: Gemini API response caching~~ DONE
+LRU cache (5 entries, 5-min TTL) added to GeminiTriageApiImpl. Keyed on symptoms.take(200).hashCode().
+Layer 1 (EmergencySymptomMatcher) always bypasses this method entirely — only the Gemini call is cached.
+6 cache tests added in GeminiCacheTest.kt (hit, miss, distinct keys, LRU eviction, TTL expiry, 200-char key).
 
 ### ~~TODO: Process death UX improvement~~ DONE
 SessionExpiredCard composable added to TriageScreen.kt. Shows "Session Expired" card with "Start New Assessment" button instead of blank screen when triageResult is null after process death.

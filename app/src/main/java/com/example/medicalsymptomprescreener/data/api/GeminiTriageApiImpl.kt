@@ -110,10 +110,15 @@ data class TriageJson(
  * (no diagnosis, no medications, always recommend professional consultation)
  * and requests a specific JSON schema to ensure parseable output.
  *
+ * **Response caching:** An LRU cache (5 entries, 5-minute TTL) deduplicates identical
+ * symptom submissions. Keyed on `symptoms.take(200).hashCode()`. The cache only covers
+ * this Gemini call — Layer 1 (EmergencySymptomMatcher) always runs first in
+ * [TriageSymptomUseCase] and bypasses this method entirely on keyword matches.
+ *
  * Parse and mapping failures result in a safe URGENT default — see [TriageSymptomUseCase]
  * for the full exception-handling strategy.
  *
- * S: Single Responsibility — handles the Gemini API call and response mapping.
+ * S: Single Responsibility — handles the Gemini API call, caching, and response mapping.
  * D: Dependency Inversion — implements [GeminiTriageApi] interface.
  */
 class GeminiTriageApiImpl @Inject constructor(
@@ -125,13 +130,38 @@ class GeminiTriageApiImpl @Inject constructor(
     private val gson: Gson
 ) : GeminiTriageApi {
 
+    /** Holds a cached [TriageResult] alongside the wall-clock timestamp of insertion. */
+    private data class CacheEntry(val result: TriageResult, val timestampMs: Long)
+
+    /**
+     * LRU cache backed by a [LinkedHashMap] in access-order mode.
+     * [removeEldestEntry] enforces the [CACHE_MAX_SIZE] capacity limit automatically.
+     * Synchronized on all access because [triage] may be called from multiple coroutines.
+     */
+    private val cache = object : LinkedHashMap<Int, CacheEntry>(CACHE_MAX_SIZE + 1, 0.75f, true) {
+        override fun removeEldestEntry(eldest: Map.Entry<Int, CacheEntry>) = size > CACHE_MAX_SIZE
+    }
+
     /**
      * Sends [symptoms] to Gemini 2.5 Flash and returns a [TriageResult].
+     *
+     * Checks the LRU cache first. Returns the cached result if found and within [CACHE_TTL_MS].
+     * On cache miss, calls the API, stores the result, then returns it.
      *
      * @throws IllegalStateException if the API returns an empty or null response body.
      * @throws com.google.gson.JsonSyntaxException if the response JSON is malformed.
      */
     override suspend fun triage(symptoms: String): TriageResult {
+        val cacheKey = symptoms.take(CACHE_KEY_LENGTH).hashCode()
+
+        synchronized(cache) {
+            cache[cacheKey]?.let { entry ->
+                if (System.currentTimeMillis() - entry.timestampMs < CACHE_TTL_MS) {
+                    return entry.result
+                }
+            }
+        }
+
         val prompt = buildPrompt(symptoms)
         val response = service.generateContent(apiKey, prompt)
 
@@ -144,7 +174,13 @@ class GeminiTriageApiImpl @Inject constructor(
             ?: throw IllegalStateException("Empty Gemini response")
 
         val triageJson = gson.fromJson(text, TriageJson::class.java)
-        return mapToTriageResult(triageJson)
+        val result = mapToTriageResult(triageJson)
+
+        synchronized(cache) {
+            cache[cacheKey] = CacheEntry(result, System.currentTimeMillis())
+        }
+
+        return result
     }
 
     /**
@@ -178,6 +214,17 @@ class GeminiTriageApiImpl @Inject constructor(
             contents = listOf(GeminiContent(listOf(GeminiPart(userText)))),
             generationConfig = GeminiGenerationConfig()
         )
+    }
+
+    companion object {
+        /** Maximum number of entries kept in the LRU cache. Oldest access is evicted first. */
+        const val CACHE_MAX_SIZE = 5
+
+        /** Cache TTL in milliseconds. Entries older than 5 minutes are treated as misses. */
+        const val CACHE_TTL_MS = 5 * 60 * 1000L
+
+        /** Number of symptom characters used to generate the cache key. */
+        const val CACHE_KEY_LENGTH = 200
     }
 
     /**

@@ -8,7 +8,7 @@ Safety-critical Android app built to demonstrate defense-in-depth AI architectur
 [![Android](https://img.shields.io/badge/Android-26%2B-green)](https://developer.android.com)
 [![Gemini API](https://img.shields.io/badge/Gemini-2.5%20Flash-orange)](https://aistudio.google.com)
 [![Google Maps](https://img.shields.io/badge/Maps-Places%20API%20v1-red)](https://developers.google.com/maps)
-[![Tests](https://img.shields.io/badge/Tests-67%20passing-brightgreen)](app/src/test)
+[![Tests](https://img.shields.io/badge/Tests-73%20passing-brightgreen)](app/src/test)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 **Project 4 of 4 in a portfolio of real-world AI Android apps.**
@@ -305,7 +305,8 @@ maps.api.key=YOUR_MAPS_API_KEY
 | UrgencyLevelOrderingTest | 6 | Enum ordinal safety invariant — reorder = immediate test failure |
 | TriageSymptomUseCaseTest | 12 | Gemini down, offline fallback, full-string Layer 1 invariant |
 | FacilitiesFailureModeTest | 7 | TELEHEALTH/HOME_CARE skip logic, all care type routing |
-| **Total** | **67** | **0 failures** |
+| GeminiCacheTest | 6 | LRU hit/miss, TTL expiry, LRU eviction, 200-char key boundary |
+| **Total** | **73** | **0 failures** |
 
 `UrgencyLevelOrderingTest` is the sentinel — if anyone reorders the `UrgencyLevel` enum
 (e.g. for readability), this test fails immediately with a clear message before production code is affected.
