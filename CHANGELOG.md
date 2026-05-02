@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.1.0.0] - 2026-05-02
+
+### Added
+- Gemini API response caching — LRU cache (5 entries, 5-min TTL) in GeminiTriageApiImpl,
+  keyed on symptoms.take(200).hashCode(). Reduces API quota usage during demos and prevents
+  redundant TTS "Call 911" triggers on repeated identical submissions.
+  Layer 1 (EmergencySymptomMatcher) always bypasses cache — only the Gemini call is cached.
+- GeminiCacheTest — 6 tests covering hit, miss, distinct keys, LRU eviction, TTL expiry,
+  200-char key boundary
+- SessionExpiredCard in TriageScreen — replaces blank screen on process death with an explicit
+  "Session Expired — Start New Assessment" card
+- GitHub Actions CI workflow — unit tests + debug APK on every push/PR to main,
+  Node.js 24 compatibility, correct testDebugUnitTest report path
+- KDoc on every class, interface, function, and important property across all 43 source files
+  - SAFETY CRITICAL annotations on EmergencySymptomMatcher and TriageRuleEngine
+  - UDF pattern block on all ViewModels
+  - SOLID principles (S + D) on all classes
+  - Per-group medical rationale in EmergencySymptomMatcher keyword sets
+  - Mount Sinai 2026 fix fully documented in TriageRuleEngine
+
+### Changed
+- Gemini model updated from gemini-2.0-flash to gemini-2.5-flash
+- README rewritten to production standard with Mermaid architecture diagrams,
+  engineering decisions table, bugs-fixed table, real-world use cases
+- Total unit tests: 73 (was 67), 0 failures
+
+---
+
 ## [1.0.0.0] - 2026-04-28
 
 ### Added
