@@ -15,7 +15,7 @@
 local.properties
 
 # Secrets (never commit)
-local.defaults.properties
+# Note: local.defaults.properties is intentionally tracked — CI placeholder values only, no real keys
 *.keystore
 *.jks
 
