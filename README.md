@@ -19,27 +19,15 @@ Safety-critical Android app built to demonstrate defense-in-depth AI architectur
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/input_screen.png" width="300" alt="Input Screen"/>
-  <img src="docs/screenshots/emergency_screen.png" width="300" alt="Emergency Screen (red)"/>
-</p>
-<p align="center">
-  <em>Input Screen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Emergency Screen (red)</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/urgent_screen.png" width="300" alt="Urgent Screen (orange)"/>
-  <img src="docs/screenshots/guidance_screen.png" width="300" alt="Guidance Screen"/>
-</p>
-<p align="center">
-  <em>Urgent Screen (orange) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Guidance Screen</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/facilities_screen.png" width="300" alt="Facilities Map Screen"/>
-  <img src="docs/screenshots/history_screen.png" width="300" alt="History Screen"/>
-</p>
-<p align="center">
-  <em>Facilities Map Screen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; History Screen</em>
+  <img src="Screenshot_20260504_161817.png" width="200" alt="Input Screen"/>
+  &nbsp;
+  <img src="Screenshot_20260504_161831.png" width="200" alt="Emergency Screen"/>
+  &nbsp;
+  <img src="Screenshot_20260504_161856.png" width="200" alt="Urgent Screen"/>
+  &nbsp;
+  <img src="Screenshot_20260504_161946.png" width="200" alt="Facilities Screen"/>
+  &nbsp;
+  <img src="Screenshot_20260504_161959.png" width="200" alt="History Screen"/>
 </p>
 
 ---

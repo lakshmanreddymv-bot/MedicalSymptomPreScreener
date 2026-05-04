@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Spanish (es) string resources for MedicalSymptomPreScreener.
+
+    These strings are used by Android's resource system when the device locale is Spanish.
+    For the in-app language toggle (EN/ES switch in SettingsScreen), the Gemini AI output
+    is translated at runtime via ML Kit (TranslationRepository), and static UI labels
+    are conditionally selected in Kotlin using the `isSpanishEnabled` StateFlow from
+    SharedTriageViewModel / SettingsViewModel.
+
+    IMPORTANT: All emergency-related strings must remain accurate and unambiguous.
+    The number 911 is preserved in all emergency strings — it is the universal emergency
+    number for US users regardless of language.
+-->
+<resources>
+    <!-- App name -->
+    <string name="app_name">PreEvaluador de Síntomas Médicos</string>
+
+    <!-- ── Input Screen ─────────────────────────────────────────────────── -->
+    <string name="input_screen_title">PreEvaluador Médico con IA</string>
+    <string name="input_describe_symptoms">Describa sus síntomas</string>
+    <string name="input_placeholder">p. ej. Tengo dolor de cabeza y náuseas</string>
+    <string name="input_body_area_label">Área del cuerpo (opcional)</string>
+    <string name="input_get_triage_advice">Obtener Consejo de Triaje</string>
+    <string name="input_analyzing">Analizando síntomas…</string>
+    <string name="input_emergency_reminder">Para emergencias siempre llame al 911</string>
+    <string name="input_mic_tap_to_speak">Toque el micrófono para hablar</string>
+    <string name="input_mic_listening">Escuchando…</string>
+    <string name="input_mic_recognizing">Reconociendo…</string>
+    <string name="input_mic_allow">Permitir micrófono para entrada de voz</string>
+    <string name="input_mic_enable_settings">Activar micrófono en Configuración</string>
+    <string name="input_error_empty">Por favor describa sus síntomas.</string>
+    <string name="input_error_failed">Evaluación fallida. Si es urgente, llame al 911.</string>
+
+    <!-- Body area chips -->
+    <string name="body_part_head">Cabeza</string>
+    <string name="body_part_chest">Pecho</string>
+    <string name="body_part_abdomen">Abdomen</string>
+    <string name="body_part_limbs">Extremidades</string>
+    <string name="body_part_general">General</string>
+
+    <!-- ── Triage Screen ─────────────────────────────────────────────────── -->
+    <string name="triage_call_911">Llamar al 911 Ahora</string>
+
+    <!-- Urgency level labels -->
+    <string name="urgency_emergency">🚨 EMERGENCIA</string>
+    <string name="urgency_urgent">⚠️ URGENTE</string>
+    <string name="urgency_non_urgent">ℹ️ NO URGENTE</string>
+    <string name="urgency_self_care">✅ AUTOCUIDADO</string>
+
+    <!-- TTS emergency phrase — must be accurate and unambiguous -->
+    <string name="triage_emergency_tts">Esto parece una emergencia. Llame al 911 inmediatamente.</string>
+
+    <!-- Facility finder buttons -->
+    <string name="triage_find_urgent_care">Encontrar Atención Urgente Cercana</string>
+    <string name="triage_find_primary_care">Encontrar Atención Primaria Cercana</string>
+    <string name="triage_find_pharmacy">Encontrar Farmacia Cercana</string>
+    <string name="triage_find_facility">Encontrar Centro Médico</string>
+
+    <!-- Follow-up questions header -->
+    <string name="triage_follow_up_header">Preguntas para hacerle a su médico:</string>
+
+    <!-- TTS button -->
+    <string name="triage_read_aloud">Leer en voz alta</string>
+
+    <!-- Action buttons -->
+    <string name="triage_new_assessment">Iniciar Nueva Evaluación</string>
+
+    <!-- Session expired card -->
+    <string name="session_expired_title">Sesión Expirada</string>
+    <string name="session_expired_body">Su evaluación anterior ya no está disponible. Inicie una nueva evaluación para obtener orientación de triaje.</string>
+
+    <!-- ── Settings Screen ───────────────────────────────────────────────── -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_language_section">Idioma</string>
+    <string name="settings_english">English</string>
+    <string name="settings_english_sublabel">Predeterminado</string>
+    <string name="settings_spanish">Español</string>
+    <string name="settings_spanish_sublabel">Con tecnología de Google ML Kit • En el dispositivo</string>
+    <string name="settings_language_note">Las respuestas de triaje de IA se traducirán en el dispositivo. Las alertas de emergencia (Llamar al 911) funcionan en ambos idiomas. Se requiere una descarga de modelo única (~20 MB) la primera vez que se activa el español.</string>
+
+    <!-- ── Disclaimer ────────────────────────────────────────────────────── -->
+    <string name="disclaimer_text">⚠️ Esto no es un diagnóstico médico. Siempre consulte a un profesional de la salud calificado. En caso de emergencia, llame al 911 de inmediato.</string>
+
+    <!-- ── History Screen ────────────────────────────────────────────────── -->
+    <string name="history_title">Historial de Evaluaciones</string>
+    <string name="history_empty">No hay evaluaciones guardadas aún.</string>
+
+    <!-- ── Facilities Screen ─────────────────────────────────────────────── -->
+    <string name="facilities_title">Instalaciones Cercanas</string>
+    <string name="facilities_loading">Buscando instalaciones cercanas…</string>
+    <string name="facilities_error">No se pudieron cargar las instalaciones cercanas.</string>
+    <string name="facilities_empty">No se encontraron instalaciones cercanas.</string>
+
+    <!-- ── Guidance Screen ───────────────────────────────────────────────── -->
+    <string name="guidance_title">Orientación de Atención</string>
+    <string name="guidance_new_assessment">Iniciar Nueva Evaluación</string>
+
+    <!-- ── Common ────────────────────────────────────────────────────────── -->
+    <string name="back">Atrás</string>
+    <string name="loading">Cargando…</string>
+    <string name="error_generic">Ocurrió un error. Por favor intente de nuevo.</string>
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+</resources>
