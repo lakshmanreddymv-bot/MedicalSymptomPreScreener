@@ -13,9 +13,11 @@ import com.example.medicalsymptomprescreener.data.local.SymptomDatabase
 import com.example.medicalsymptomprescreener.data.monitor.ConnectivityNetworkMonitor
 import com.example.medicalsymptomprescreener.data.repository.FacilityRepositoryImpl
 import com.example.medicalsymptomprescreener.data.repository.SymptomRepositoryImpl
+import com.example.medicalsymptomprescreener.data.repository.TranslationRepositoryImpl
 import com.example.medicalsymptomprescreener.domain.monitor.NetworkMonitor
 import com.example.medicalsymptomprescreener.domain.repository.FacilityRepository
 import com.example.medicalsymptomprescreener.domain.repository.SymptomRepository
+import com.example.medicalsymptomprescreener.domain.repository.TranslationRepository
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Binds
@@ -182,4 +184,14 @@ abstract class BindingsModule {
     @Binds
     @Singleton
     abstract fun bindFacilityRepository(impl: FacilityRepositoryImpl): FacilityRepository
+
+    /**
+     * Binds [TranslationRepositoryImpl] as the [TranslationRepository] implementation.
+     *
+     * Scoped as a [Singleton] so a single ML Kit [Translator] instance is shared across
+     * all ViewModels — avoids redundant model loads and native resource allocation.
+     */
+    @Binds
+    @Singleton
+    abstract fun bindTranslationRepository(impl: TranslationRepositoryImpl): TranslationRepository
 }

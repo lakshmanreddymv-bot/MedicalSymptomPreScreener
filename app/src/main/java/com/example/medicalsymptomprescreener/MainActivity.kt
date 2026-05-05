@@ -15,6 +15,7 @@ import com.example.medicalsymptomprescreener.ui.facilities.FacilitiesScreen
 import com.example.medicalsymptomprescreener.ui.guidance.GuidanceScreen
 import com.example.medicalsymptomprescreener.ui.history.HistoryScreen
 import com.example.medicalsymptomprescreener.ui.input.InputScreen
+import com.example.medicalsymptomprescreener.ui.settings.SettingsScreen
 import com.example.medicalsymptomprescreener.ui.theme.MedicalSymptomPreScreenerTheme
 import com.example.medicalsymptomprescreener.ui.triage.SharedTriageViewModel
 import com.example.medicalsymptomprescreener.ui.triage.TriageScreen
@@ -23,12 +24,13 @@ import dagger.hilt.android.AndroidEntryPoint
 /**
  * Single Activity entry point for the Medical Symptom Pre-Screener.
  *
- * Hosts the full [NavHost] with five destinations:
- * - `input` → [InputScreen]: symptom entry via text or voice
- * - `triage` → [TriageScreen]: validated triage result display
- * - `facilities/{careType}` → [FacilitiesScreen]: nearby facility search
- * - `guidance/{careType}` → [GuidanceScreen]: telehealth/home care guidance
- * - `history` → [HistoryScreen]: saved assessment history
+ * Hosts the full [NavHost] with six destinations:
+ * - `input`                  → [InputScreen]: symptom entry via text or voice
+ * - `triage`                 → [TriageScreen]: validated triage result display
+ * - `facilities/{careType}`  → [FacilitiesScreen]: nearby facility search
+ * - `guidance/{careType}`    → [GuidanceScreen]: telehealth/home care guidance
+ * - `history`                → [HistoryScreen]: saved assessment history
+ * - `settings`               → [SettingsScreen]: language preference (EN / ES) toggle
  *
  * [SharedTriageViewModel] is scoped to the [NavHost] composable (effectively the Activity)
  * so that it is shared across all destinations without re-creation on navigation.
@@ -57,7 +59,8 @@ class MainActivity : ComponentActivity() {
                             onTriageResult = { result, symptomText ->
                                 sharedVm.setResult(symptomText, result)
                                 navController.navigate("triage")
-                            }
+                            },
+                            onOpenSettings = { navController.navigate("settings") }
                         )
                     }
 
@@ -105,6 +108,10 @@ class MainActivity : ComponentActivity() {
 
                     composable("history") {
                         HistoryScreen(onBack = { navController.popBackStack() })
+                    }
+
+                    composable("settings") {
+                        SettingsScreen(onBack = { navController.popBackStack() })
                     }
                 }
             }

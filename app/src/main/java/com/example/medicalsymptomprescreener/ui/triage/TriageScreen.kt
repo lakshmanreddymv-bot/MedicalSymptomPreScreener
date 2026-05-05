@@ -53,6 +53,7 @@ fun TriageScreen(
     onNewAssessment: () -> Unit
 ) {
     val triageResult by sharedViewModel.triageResult.collectAsState()
+    val isSpanish by sharedViewModel.isSpanishEnabled.collectAsState()
     val context = LocalContext.current
     val ttsManager = remember { TextToSpeechManager(context) }
 
@@ -61,15 +62,21 @@ fun TriageScreen(
         onDispose { ttsManager.destroy() }
     }
 
-    // Auto-trigger TTS on EMERGENCY only
+    // Auto-trigger TTS on EMERGENCY only — phrase is bilingual per feature flag.
+    // Emergency alerts must work in both languages (strict requirement).
     LaunchedEffect(triageResult) {
         if (triageResult?.urgencyLevel == UrgencyLevel.EMERGENCY) {
-            ttsManager.speak("This appears to be an emergency. Call 911 immediately.")
+            val emergencyPhrase = if (isSpanish) {
+                "Esto parece una emergencia. Llame al 911 inmediatamente."
+            } else {
+                "This appears to be an emergency. Call 911 immediately."
+            }
+            ttsManager.speak(emergencyPhrase)
         }
     }
 
     val result = triageResult ?: run {
-        SessionExpiredCard(onNewAssessment = onNewAssessment)
+        SessionExpiredCard(onNewAssessment = onNewAssessment, isSpanish = isSpanish)
         return
     }
 
@@ -87,7 +94,8 @@ fun TriageScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // EMERGENCY: prominent 911 button at the very top
+        // EMERGENCY: prominent 911 button at the very top.
+        // Button label is bilingual — emergency alerts must work in both languages.
         if (result.urgencyLevel == UrgencyLevel.EMERGENCY) {
             Spacer(Modifier.height(32.dp))
             Button(
@@ -108,7 +116,7 @@ fun TriageScreen(
                 )
                 Spacer(Modifier.size(8.dp))
                 Text(
-                    "Call 911 Now",
+                    text = if (isSpanish) "Llamar al 911 Ahora" else "Call 911 Now",
                     color = Color(0xFFB71C1C),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -118,13 +126,13 @@ fun TriageScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Urgency level label
+        // Urgency level label — bilingual when Spanish is enabled
         Text(
             text = when (result.urgencyLevel) {
-                UrgencyLevel.EMERGENCY -> "🚨 EMERGENCY"
-                UrgencyLevel.URGENT -> "⚠️ URGENT"
-                UrgencyLevel.NON_URGENT -> "ℹ️ NON-URGENT"
-                UrgencyLevel.SELF_CARE -> "✅ SELF-CARE"
+                UrgencyLevel.EMERGENCY -> if (isSpanish) "🚨 EMERGENCIA" else "🚨 EMERGENCY"
+                UrgencyLevel.URGENT -> if (isSpanish) "⚠️ URGENTE" else "⚠️ URGENT"
+                UrgencyLevel.NON_URGENT -> if (isSpanish) "ℹ️ NO URGENTE" else "ℹ️ NON-URGENT"
+                UrgencyLevel.SELF_CARE -> if (isSpanish) "✅ AUTOCUIDADO" else "✅ SELF-CARE"
             },
             color = textColor,
             fontSize = 28.sp,
@@ -143,7 +151,7 @@ fun TriageScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Reasoning card
+        // Reasoning card — text already translated by SharedTriageViewModel when Spanish is on
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,12 +180,16 @@ fun TriageScreen(
                         containerColor = textColor.copy(alpha = 0.2f)
                     )
                 ) {
-                    Icon(Icons.Default.VolumeUp, contentDescription = "Read aloud", tint = textColor)
+                    Icon(
+                        Icons.Default.VolumeUp,
+                        contentDescription = if (isSpanish) "Leer en voz alta" else "Read aloud",
+                        tint = textColor
+                    )
                 }
             }
         }
 
-        // Follow-up questions (display-only — no multi-turn)
+        // Follow-up questions (display-only — text already translated when Spanish is on)
         if (result.followUpQuestions.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
             Column(
@@ -186,7 +198,8 @@ fun TriageScreen(
                     .padding(horizontal = 24.dp)
             ) {
                 Text(
-                    "Questions to ask your doctor:",
+                    text = if (isSpanish) "Preguntas para hacerle a su médico:"
+                    else "Questions to ask your doctor:",
                     color = textColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
@@ -214,10 +227,14 @@ fun TriageScreen(
             ) {
                 Text(
                     text = when (result.urgencyLevel) {
-                        UrgencyLevel.URGENT -> "Find Urgent Care Nearby"
-                        UrgencyLevel.NON_URGENT -> "Find Primary Care Nearby"
-                        UrgencyLevel.SELF_CARE -> "Find Pharmacy Nearby"
-                        else -> "Find Nearby Facility"
+                        UrgencyLevel.URGENT ->
+                            if (isSpanish) "Encontrar Atención Urgente Cercana" else "Find Urgent Care Nearby"
+                        UrgencyLevel.NON_URGENT ->
+                            if (isSpanish) "Encontrar Atención Primaria Cercana" else "Find Primary Care Nearby"
+                        UrgencyLevel.SELF_CARE ->
+                            if (isSpanish) "Encontrar Farmacia Cercana" else "Find Pharmacy Nearby"
+                        else ->
+                            if (isSpanish) "Encontrar Centro Médico" else "Find Nearby Facility"
                     },
                     fontWeight = FontWeight.Bold
                 )
@@ -225,7 +242,7 @@ fun TriageScreen(
             Spacer(Modifier.height(12.dp))
         }
 
-        // New assessment
+        // New assessment button
         Button(
             onClick = {
                 sharedViewModel.clear()
@@ -237,7 +254,10 @@ fun TriageScreen(
                 .height(48.dp),
             colors = ButtonDefaults.outlinedButtonColors()
         ) {
-            Text("Start New Assessment", color = textColor)
+            Text(
+                text = if (isSpanish) "Iniciar Nueva Evaluación" else "Start New Assessment",
+                color = textColor
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -255,7 +275,10 @@ fun TriageScreen(
 }
 
 @Composable
-private fun SessionExpiredCard(onNewAssessment: () -> Unit) {
+private fun SessionExpiredCard(
+    onNewAssessment: () -> Unit,
+    isSpanish: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -272,19 +295,22 @@ private fun SessionExpiredCard(onNewAssessment: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Session Expired",
+                    text = if (isSpanish) "Sesión Expirada" else "Session Expired",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Your previous assessment is no longer available. Start a new assessment to get triage guidance.",
+                    text = if (isSpanish)
+                        "Su evaluación anterior ya no está disponible. Inicie una nueva evaluación para obtener orientación de triaje."
+                    else
+                        "Your previous assessment is no longer available. Start a new assessment to get triage guidance.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(16.dp))
                 OutlinedButton(onClick = onNewAssessment) {
-                    Text("Start New Assessment")
+                    Text(if (isSpanish) "Iniciar Nueva Evaluación" else "Start New Assessment")
                 }
             }
         }

@@ -89,6 +89,12 @@ dependencies {
     // Accompanist
     implementation(libs.accompanist.permissions)
 
+    // ML Kit Translation (on-device Spanish ↔ English)
+    implementation(libs.mlkit.translate)
+
+    // DataStore Preferences (language preference persistence)
+    implementation(libs.datastore.preferences)
+
     // Coil
     implementation(libs.coil.compose)
 

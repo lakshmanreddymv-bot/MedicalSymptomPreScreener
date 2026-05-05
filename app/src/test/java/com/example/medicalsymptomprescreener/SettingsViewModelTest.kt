@@ -1,6 +1,5 @@
 package com.example.medicalsymptomprescreener
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.medicalsymptomprescreener.data.local.LanguagePreferenceDataStore
 import com.example.medicalsymptomprescreener.domain.repository.TranslationRepository
 import com.example.medicalsymptomprescreener.ui.settings.SettingsViewModel
@@ -16,7 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -35,9 +33,6 @@ import org.mockito.kotlin.whenever
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
-
-    @get:Rule
-    val instantTaskExecutor = InstantTaskExecutorRule()
 
     private val testDispatcher = StandardTestDispatcher()
 

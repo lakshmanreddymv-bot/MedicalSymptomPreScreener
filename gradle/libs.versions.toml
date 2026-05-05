@@ -27,6 +27,8 @@ mockitoCore = "5.11.0"
 mockitoKotlin = "5.4.0"
 coroutinesTest = "1.9.0"
 turbine = "1.2.0"
+mlkitTranslate = "17.0.3"
+datastorePreferences = "1.1.1"
 
 [libraries]
 # Core
@@ -88,6 +90,12 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+
+# ML Kit Translation
+mlkit-translate = { group = "com.google.mlkit", name = "translate", version.ref = "mlkitTranslate" }
+
+# DataStore Preferences
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,6 +1,5 @@
 package com.example.medicalsymptomprescreener
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.medicalsymptomprescreener.data.local.LanguagePreferenceDataStore
 import com.example.medicalsymptomprescreener.domain.model.CareType
 import com.example.medicalsymptomprescreener.domain.model.Symptom
@@ -24,10 +23,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -48,9 +47,6 @@ import org.mockito.kotlin.whenever
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SharedTriageViewModelTranslationTest {
-
-    @get:Rule
-    val instantTaskExecutor = InstantTaskExecutorRule()
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -132,8 +128,10 @@ class SharedTriageViewModelTranslationTest {
         val englishReasoning = "Mild symptoms. Seek care within 48 hours."
         val spanishReasoning = "Síntomas leves. Busque atención en 48 horas."
 
+        // Only stub the reasoning — followUpQuestions is empty so no other translate call happens.
+        // Do NOT add an any() stub after a specific stub: Mockito checks stubs in reverse
+        // registration order, so any() would shadow the specific stub.
         whenever(translationRepository.translate(englishReasoning)).thenReturn(spanishReasoning)
-        whenever(translationRepository.translate(any())).thenReturn("translated")
 
         val result = fakeResult(reasoning = englishReasoning, followUpQuestions = emptyList())
         viewModel.setResult("headache", result)
@@ -233,10 +231,12 @@ class SharedTriageViewModelTranslationTest {
         viewModel.setResult("headache", originalResult)
         advanceUntilIdle()
 
-        // SaveSymptomUseCase should be called with the ORIGINAL result, not the translated one
+        // Symptom has a random UUID so we cannot use equals() — match on description only.
+        // When mixing matchers, ALL args must use matchers (Mockito rule) — use eq() for result.
+        // The ORIGINAL (untranslated) TriageResult must be saved to history.
         verify(saveUseCase).invoke(
-            Symptom(description = "headache"),
-            originalResult
+            argThat { description == "headache" },
+            eq(originalResult)
         )
     }
 

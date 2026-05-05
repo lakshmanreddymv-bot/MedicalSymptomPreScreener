@@ -45,7 +45,7 @@ class SettingsViewModel @Inject constructor(
     val isSpanishEnabled: StateFlow<Boolean> = languagePrefs.isSpanishEnabled
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = false
         )
 
