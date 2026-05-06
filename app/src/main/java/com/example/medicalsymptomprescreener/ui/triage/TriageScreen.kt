@@ -110,7 +110,7 @@ fun TriageScreen(
             ) {
                 Icon(
                     Icons.Default.Call,
-                    contentDescription = null,
+                    contentDescription = if (isSpanish) "Llamar al 911" else "Call 911",
                     tint = Color(0xFFB71C1C),
                     modifier = Modifier.size(32.dp)
                 )
